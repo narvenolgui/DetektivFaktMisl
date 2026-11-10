@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Детектив мыслей</title>
+<style>
+  :root{
+    --bg1:#f0eefb; --bg2:#eaeaf6;
+    --card:#fff; --ink:#2a2940; --muted:#66618a;
+    --accent:#6b5ce0; --accent-dark:#5346c4;
+    --ok:#3fa87a; --ok-soft:#e2f4ec;
+    --warn:#e08b5a; --warn-soft:#fdeee2;
+    --fact:#3fa87a; --thought:#8b5ce0;
+    --line:#d8d2f0;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;padding:22px 14px 40px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
+    background:linear-gradient(160deg,var(--bg1),var(--bg2));color:var(--ink);min-height:100vh;
+    display:flex;justify-content:center;align-items:flex-start}
+  #app{width:100%;max-width:720px}
+  header{margin-bottom:14px}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:15px;color:var(--muted);letter-spacing:.3px}
+  .bar{height:8px;background:#d8d2ec;border-radius:99px;margin-top:10px;overflow:hidden}
+  .bar>i{display:block;height:100%;width:0;background:linear-gradient(90deg,#a89cf0,#6b5ce0);border-radius:99px;transition:width .4s ease}
+  .card{background:var(--card);border-radius:22px;padding:26px 24px;box-shadow:0 12px 34px rgba(42,41,64,.10);
+    margin-top:16px;animation:pop .3s ease}
+  @keyframes pop{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  h1{font-size:24px;margin:0 0 10px;line-height:1.25}
+  h2{font-size:21px;margin:0 0 12px;line-height:1.3}
+  p{line-height:1.6;margin:0 0 12px;font-size:16px}
+  .muted{color:var(--muted);font-size:14.5px}
+  .count{font-size:13px;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;font-weight:600;margin-bottom:6px}
+  .situation{font-size:18.5px;line-height:1.5;font-weight:600;margin:14px 0 22px;padding:18px;
+    background:#f7f5fd;border-radius:16px;border-left:5px solid var(--accent)}
+  .opt{display:block;width:100%;text-align:left;cursor:pointer;background:#f9f8fd;border:2px solid var(--line);
+    border-radius:15px;padding:14px 16px;margin-bottom:10px;font-size:15.5px;line-height:1.45;
+    color:var(--ink);font-family:inherit;transition:.18s}
+  .opt:hover{border-color:#b8aef0;background:#f4f0fd;transform:translateY(-1px)}
+  .opt:disabled{cursor:default;transform:none;opacity:.95}
+  .opt .tag{font-weight:700;display:block;font-size:13px;letter-spacing:.4px;margin-bottom:3px}
+  .opt.fact .tag{color:var(--fact)}
+  .opt.thought .tag{color:var(--thought)}
+  .opt.right{border-color:var(--ok);background:var(--ok-soft)}
+  .opt.wrong{border-color:var(--warn);background:var(--warn-soft)}
+  .feedback{margin-top:16px;padding:15px 16px;border-radius:14px;font-size:15px;line-height:1.6;display:none}
+  .feedback.show{display:block;animation:pop .3s}
+  .feedback.good{background:var(--ok-soft);border-left:5px solid var(--ok)}
+  .feedback.think{background:var(--warn-soft);border-left:5px solid var(--warn)}
+  button.primary{background:var(--accent);color:#fff;border:none;border-radius:14px;padding:14px 24px;
+    font-size:16px;font-weight:600;cursor:pointer;font-family:inherit;transition:.18s;margin-top:14px}
+  button.primary:hover{background:var(--accent-dark);transform:translateY(-1px)}
+  button.primary:disabled{background:#b8b0e8;cursor:not-allowed;transform:none}
+  .checkbox-list{margin:8px 0 4px}
+  .chk{display:flex;align-items:flex-start;gap:10px;background:#f9f8fd;border:2px solid var(--line);
+    border-radius:13px;padding:12px 14px;margin-bottom:8px;cursor:pointer;font-size:15px;line-height:1.5;transition:.15s}
+  .chk:hover{border-color:#b8aef0;background:#f4f0fd}
+  .chk .box{width:22px;height:22px;border-radius:6px;border:2px solid var(--line);background:#fff;
+    flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:700;
+    color:#fff;transition:.15s;font-size:14px}
+  .chk.on{border-color:var(--accent);background:#f4f0fd}
+  .chk.on .box{background:var(--accent);border-color:var(--accent)}
+  .chk.on .box::after{content:'✓'}
+  .chk.good{background:var(--ok-soft);border-color:var(--ok)}
+  .chk.good .box{background:var(--ok);border-color:var(--ok)}
+  .chk.bad{background:var(--warn-soft);border-color:var(--warn)}
+  .chk.bad .box{background:var(--warn);border-color:var(--warn)}
+  .rule-box{background:#f7f5fd;border-radius:14px;padding:16px 18px;margin:14px 0;border-left:5px solid var(--accent)}
+  .rule-box b{color:var(--accent-dark)}
+  .final-thought{background:linear-gradient(135deg,#f7f5fd,#ece4fb);border:2px dashed var(--accent);
+    border-radius:16px;padding:18px;margin:14px 0;font-size:16px;line-height:1.6}
+  .final-thought .label{font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;
+    font-weight:700;margin-bottom:6px}
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="noprint">
+    <div class="brand">🔍 ДЕТЕКТИВ МЫСЛЕЙ</div>
+    <div class="bar"><i id="barFill"></i></div>
+  </header>
+  <div id="screen"></div>
+</div>
+<script>
+const screen = document.getElementById('screen');
+const barFill = document.getElementById('barFill');
+function progress(p){ barFill.style.width = Math.round(p*100) + '%'; }
+
+const CARDS = [
+  {text:'Вчера была тренировочная эвакуация.', type:'fact',
+   fb:'Да, это факт — то, что произошло. Его нельзя оспорить.'},
+  {text:'Значит, скоро в школе что-то случится.', type:'thought',
+   fb:'Это мысль-версия. Тренировка — не предсказание. Мозг связал два события, но связи между ними нет.'},
+  {text:'Сейчас я дома, рядом взрослые.', type:'fact',
+   fb:'Факт. Это можно проверить прямо сейчас: где ты, кто рядом.'},
+  {text:'Если я засну, случится что-то плохое.', type:'thought',
+   fb:'Это мысль. Сон не причина катастроф. Мозг пугает, но это не предсказание.'},
+  {text:'Мне страшно.', type:'fact',
+   fb:'Верно. Чувство — это факт о тебе сейчас: страх реально есть в теле. Но факт «мне страшно» не значит «опасно».'},
+  {text:'Я никогда не смогу перестать бояться.', type:'thought',
+   fb:'Это мысль-предсказание. «Никогда» — слово, которое мозг любит, но не может знать будущего. Бояться меньше — навык, а не талант.'}
+];
+
+function screenIntro(){
+  progress(0.05);
+  screen.innerHTML = `
+    <div class="card">
+      <h1>Детектив не путает факт и версию</h1>
+      <p>Хороший детектив знает: <b>факт</b> — это то, что произошло и можно проверить. <b>Версия (мысль)</b> — объяснение, которое мозг предлагает, но оно может быть ошибочным.</p>
+      <p>Тревога любит подсовывать версии как факты. Наша задача — научиться их различать.</p>
+      <div class="rule-box">
+        <b>Факт</b> — «Вчера была тренировка».<br>
+        <b>Мысль</b> — «Значит, скоро что-то случится».
+      </div>
+      <p class="muted">Дальше — 6 фраз. На каждую два выбора: факт или мысль.</p>
+      <button class="primary" onclick="screenSort(0)">Начать</button>
+    </div>`;
+}
+
+function screenSort(i){
+  if(i >= CARDS.length){ screenCheck(); return; }
+  progress(0.1 + 0.4*(i/CARDS.length));
+  const c = CARDS[i];
+  screen.innerHTML = `
+    <div class="card">
+      <div class="count">Карточка ${i+1} из ${CARDS.length}</div>
+      <div class="situation">«${escapeHtml(c.text)}»</div>
+      <p class="muted">Это факт или мысль?</p>
+      <button class="opt fact" data-type="fact">
+        <span class="tag">✓ ФАКТ</span>То, что произошло, можно проверить
+      </button>
+      <button class="opt thought" data-type="thought">
+        <span class="tag">💭 МЫСЛЬ</span>Объяснение или предсказание
+      </button>
+      <div class="feedback" id="fb"></div>
+      <div id="nextBox"></div>
+    </div>`;
+
+  let answered = false;
+  document.querySelectorAll('.opt').forEach(btn=>{
+    btn.onclick = ()=>{
+      if(answered) return;
+      answered = true;
+      const pick = btn.dataset.type;
+      const right = pick === c.type;
+      document.querySelectorAll('.opt').forEach(b=>{
+        b.disabled = true;
+        if(b.dataset.type === c.type) b.classList.add('right');
+        else if(b.dataset.type === pick) b.classList.add('wrong');
+      });
+      const fb = document.getElementById('fb');
+      fb.className = 'feedback show ' + (right ? 'good' : 'think');
+      fb.innerHTML = (right ? '<b>Верно.</b> ' : '<b>Смотри:</b> ') + escapeHtml(c.fb);
+      const nb = document.createElement('button');
+      nb.className = 'primary';
+      nb.textContent = 'Дальше';
+      nb.onclick = ()=> screenSort(i+1);
+      document.getElementById('nextBox').appendChild(nb);
+    };
+  });
+}
+
+function screenCheck(){
+  progress(0.55);
+  screen.innerHTML = `
+    <div class="card">
+      <p class="count">Проверка детектива</p>
+      <h2>Разбираем пугающую мысль</h2>
+      <p>Проверять будем не тебя, а <b>мысль</b>. Это и есть работа детектива.</p>
+      <div class="situation">«Завтра в школе может случиться что-то плохое».</div>
+      <button class="primary" onclick="step1()">Шаг 1. Что я знаю точно?</button>
+    </div>`;
+}
+
+function multiStep(html, goodIds, nextFn){
+  screen.innerHTML = html;
+  const chks = document.querySelectorAll('.chk');
+  chks.forEach(ch=>{
+    ch.onclick = ()=>{
+      if(ch.classList.contains('good')||ch.classList.contains('bad')) return;
+      ch.classList.toggle('on');
+      document.getElementById('checkBtn').disabled = ![...chks].some(x=>x.classList.contains('on'));
+    };
+  });
+  document.getElementById('checkBtn').onclick = ()=>{
+    document.getElementById('checkBtn').disabled = true;
+    chks.forEach((ch,idx)=>{
+      ch.style.pointerEvents = 'none';
+      const isGood = goodIds.includes(idx);
+      const on = ch.classList.contains('on');
+      if(isGood && on) ch.classList.add('good');
+      else if((isGood && !on) || (!isGood && on)) ch.classList.add('bad');
+    });
+    const fb = document.getElementById('fb');
+    fb.className = 'feedback good show';
+    fb.innerHTML = html.includes('__fb__') ? '' : fbText;
+    const nb = document.createElement('button');
+    nb.className = 'primary';
+    nb.textContent = nextBtnText;
+    nb.onclick = nextFn;
+    document.getElementById('nextBox').appendChild(nb);
+  };
+}
+
+let fbText = '', nextBtnText = '';
+
+function step1(){
+  progress(0.65);
+  fbText = '<b>Хорошо.</b> Факты — только то, что реально и проверяемо: школа завтра будет, тренировка была, сейчас ты дома. «Завтра опасно» и «точно случится» — это <b>не факты, а версии</b>.';
+  nextBtnText = 'Шаг 2';
+  multiStep(`
+    <div class="card">
+      <p class="count">Шаг 1 из 3</p>
+      <h2>Что я знаю точно?</h2>
+      <p>Отметь <b>все факты</b> — то, что реально произошло или можно проверить прямо сейчас.</p>
+      <div class="checkbox-list">
+        <div class="chk"><span class="box"></span>Завтра будет школа</div>
+        <div class="chk"><span class="box"></span>Вчера была тренировочная эвакуация</div>
+        <div class="chk"><span class="box"></span>Сейчас вечер, я дома, рядом взрослые</div>
+        <div class="chk"><span class="box"></span>Завтра будет опасно</div>
+        <div class="chk"><span class="box"></span>Что-то плохое точно случится</div>
+      </div>
+      <button class="primary" id="checkBtn" disabled>Проверить</button>
+      <div class="feedback" id="fb"></div>
+      <div id="nextBox"></div>
+    </div>`, [0,1,2], step2);
+}
+
+function step2(){
+  progress(0.8);
+  fbText = '<b>Точно.</b> Версии: «может случиться», «если расслаблюсь — беда», «нельзя спокойно засыпать». Это не факты, а <b>страшилки мозга</b>. Он пытается защитить, но перегибает.';
+  nextBtnText = 'Шаг 3';
+  multiStep(`
+    <div class="card">
+      <p class="count">Шаг 2 из 3</p>
+      <h2>Что я домысливаю?</h2>
+      <p>Отметь <b>все мысли-версии</b> — то, что мозг предполагает, но не может знать.</p>
+      <div class="checkbox-list">
+        <div class="chk"><span class="box"></span>Что-то плохое может случиться</div>
+        <div class="chk"><span class="box"></span>Если расслаблюсь — случится беда</div>
+        <div class="chk"><span class="box"></span>Завтра будет школа</div>
+        <div class="chk"><span class="box"></span>Сейчас вечер, я дома</div>
+        <div class="chk"><span class="box"></span>Мне нельзя засыпать спокойно</div>
+      </div>
+      <button class="primary" id="checkBtn" disabled>Проверить</button>
+      <div class="feedback" id="fb"></div>
+      <div id="nextBox"></div>
+    </div>`, [0,1,4], step3);
+}
+
+function step3(){
+  progress(0.92);
+  screen.innerHTML = `
+    <div class="card">
+      <p class="count">Шаг 3 из 3</p>
+      <h2>Что скорее всего произойдёт?</h2>
+      <p>Детектив не выбирает худший вариант — он выбирает <b>наиболее вероятный</b> на основе фактов.</p>
+      <button class="opt" data-val="a">Что-то плохое и опасное</button>
+      <button class="opt" data-val="b">Обычный день: уроки, перемены, обед — как всегда</button>
+      <button class="opt" data-val="c">Не знаю, поэтому буду бояться</button>
+      <div class="feedback" id="fb"></div>
+      <div id="nextBox"></div>
+    </div>`;
+
+  let answered = false;
+  document.querySelectorAll('.opt').forEach(btn=>{
+    btn.onclick = ()=>{
+      if(answered) return;
+      answered = true;
+      const pick = btn.dataset.val;
+      document.querySelectorAll('.opt').forEach(b=>b.disabled = true);
+      document.querySelector('.opt[data-val="b"]').classList.add('right');
+      if(pick !== 'b') btn.classList.add('wrong');
+      const fb = document.getElementById('fb');
+      fb.className = 'feedback good show';
+      if(pick === 'b') fb.innerHTML = '<b>Именно.</b> На основе фактов самый вероятный сценарий — <b>обычный день</b>. Тренировка была, школа будет — и это всё, что мы знаем точно.';
+      else if(pick === 'a') fb.innerHTML = 'Это <b>версия</b>, и не самая вероятная. Факты говорят об обычном дне. Тревога выбирает худший вариант — детектив выбирает <b>самый вероятный</b>.';
+      else fb.innerHTML = '«Не знаю — значит, буду бояться» — тоже версия. Можно не знать всего и опираться на факты: <b>скорее всего будет обычный день</b>.';
+      const nb = document.createElement('button');
+      nb.className = 'primary';
+      nb.textContent = 'Итог';
+      nb.onclick = screenFinal;
+      document.getElementById('nextBox').appendChild(nb);
+    };
+  });
+}
+
+function screenFinal(){
+  progress(1);
+  screen.innerHTML = `
+    <div class="card">
+      <h1>Правило детектива</h1>
+      <div class="final-thought">
+        <div class="label">Запомни</div>
+        <b>Факт</b> — то, что произошло и можно проверить. На него можно опираться.<br><br>
+        <b>Мысль</b> — объяснение или предсказание. Её можно проверять, но нельзя путать с фактом.
+      </div>
+      <h2 style="margin-top:22px">Проверка за 3 шага</h2>
+      <div class="rule-box">
+        <b>1.</b> Что я знаю точно?<br>
+        <b>2.</b> Что я домысливаю?<br>
+        <b>3.</b> Что скорее всего произойдёт?
+      </div>
+      <p>Если делаешь эту проверку — мысль перестаёт быть приказом. Она становится <b>версией</b>, которую можно спокойно рассмотреть.</p>
+      <div class="rule-box" style="border-left-color:var(--fact)">
+        <b>Пример для ночи.</b> Мысль: «Если засну — случится плохое».<br>
+        <b>Факт:</b> я в постели, дома, рядом взрослые. <b>Мысль:</b> «случится плохое». <b>Вероятно:</b> обычная ночь и обычное утро.
+      </div>
+      <p class="muted">Ты — детектив, а не заложница версии.</p>
+      <div class="noprint" style="margin-top:14px">
+        <button class="primary" onclick="screenIntro()">Пройти заново</button>
+      </div>
+    </div>`;
+}
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+screenIntro();
+</script>
+</body>
+</html>
